@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GOMODCACHE: ${{ github.workspace }}/.cache/go/pkg/mod
+  GOCACHE: ${{ github.workspace }}/.cache/go-build
+  GOLANGCI_LINT_CACHE: ${{ github.workspace }}/.cache/golangci-lint
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+      - run: go mod download
+      - run: go build ./cmd/... ./internal/...
+
+  test-short:
+    name: test-short
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+      - run: go mod download
+      - run: go test -short ./...
+
+  test-generated-service:
+    name: test-generated-service
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+      - run: go mod download
+      - run: go test ./cmd/hz-openapi-gen -run TestGeneratedServiceCompiles
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: actions/cache@v5
+        with:
+          path: .cache/golangci-lint
+          key: ${{ runner.os }}-golangci-lint-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golangci-lint-
+      - run: go mod download
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.12.2
+          install-only: true
+          skip-cache: true
+      - run: golangci-lint config verify
+      - run: golangci-lint run ./cmd/... ./internal/...
+
+  vulnerability:
+    name: vulnerability
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+      - run: go mod download
+      - run: go tool govulncheck ./cmd/... ./internal/...

@@ -1,0 +1,62 @@
+stages:
+  - quality
+
+default:
+  interruptible: true
+  image: golang:1.26
+
+variables:
+  GOMODCACHE: "$CI_PROJECT_DIR/.cache/go/pkg/mod"
+  GOCACHE: "$CI_PROJECT_DIR/.cache/go-build"
+  GOLANGCI_LINT_CACHE: "$CI_PROJECT_DIR/.cache/golangci-lint"
+
+.go-cache:
+  cache:
+    key:
+      files:
+        - go.sum
+    paths:
+      - .cache/go/pkg/mod
+      - .cache/go-build
+      - .cache/golangci-lint
+
+build:
+  stage: quality
+  extends: .go-cache
+  script:
+    - go mod download
+    - go build ./cmd/... ./internal/...
+
+test-short:
+  stage: quality
+  extends: .go-cache
+  script:
+    - go mod download
+    - go test -short ./...
+
+test-generated-service:
+  stage: quality
+  extends: .go-cache
+  script:
+    - go mod download
+    - go test ./cmd/hz-openapi-gen -run TestGeneratedServiceCompiles
+
+lint:
+  stage: quality
+  image: golangci/golangci-lint:v2.12.2
+  extends: .go-cache
+  script:
+    - go mod download
+    - golangci-lint config verify
+    - golangci-lint run ./cmd/... ./internal/...
+
+# govulncheck panics on Go 1.26 type params due to an x/tools bug;
+# allow_failure keeps it from blocking the pipeline. Re-enable when
+# golang.org/x/tools/internal/typesinternal/element.go is patched.
+vulnerability:
+  stage: quality
+  extends: .go-cache
+  allow_failure: true
+  script:
+    - go mod download
+    - go tool govulncheck ./cmd/... ./internal/...

@@ -1,0 +1,12 @@
+bin/
+dist/
+
+.cache/
+
+*.test
+coverage.out
+*.coverprofile
+
+.idea/
+.vscode/
+.zed/

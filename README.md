@@ -20,7 +20,7 @@ go run ./cmd/hz-openapi-gen -spec=api/openapi.yaml -out=. -module=example.com/se
 Or add a directive to your service and run `go generate ./...`:
 
 ```go
-//go:generate go run gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/cmd/hz-openapi-gen -spec=api/openapi.yaml -out=. -module=example.com/service
+//go:generate go run github.com/victorzhuk/hz-openapi-gen/cmd/hz-openapi-gen -spec=api/openapi.yaml -out=. -module=example.com/service
 ```
 
 ## What it generates

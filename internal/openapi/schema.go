@@ -4,7 +4,7 @@ import (
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
 
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/diag"
+	"github.com/victorzhuk/hz-openapi-gen/internal/diag"
 )
 
 const (

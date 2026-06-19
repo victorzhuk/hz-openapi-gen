@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Module path migrated from `gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen` to `github.com/victorzhuk/hz-openapi-gen` so the tool is installable via `go install github.com/victorzhuk/hz-openapi-gen/cmd/hz-openapi-gen@latest`.
+
+### Fixed
+
+- `gofmt` violation: missing blank line between `const` block and `var` declaration in `cmd/hz-openapi-gen/main.go`.
+
 ## [0.1.0] - 2026-06-19
 
 ### Added
@@ -17,5 +25,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Development and CI quality gates for build, short tests, generated-service compilation, linting, and `govulncheck`.
 - Project documentation for architecture, developer workflow, and runbook procedures.
 
-[Unreleased]: https://gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/-/compare/v0.1.0...main
-[0.1.0]: https://gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/-/tags/v0.1.0
+[Unreleased]: https://github.com/victorzhuk/hz-openapi-gen/compare/v0.1.0...main
+[0.1.0]: https://github.com/victorzhuk/hz-openapi-gen/releases/tag/v0.1.0

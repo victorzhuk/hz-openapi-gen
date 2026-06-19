@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/diag"
+	"github.com/victorzhuk/hz-openapi-gen/internal/diag"
 )
 
 func TestHertzPath(t *testing.T) {

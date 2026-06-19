@@ -1,4 +1,4 @@
-module gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen
+module github.com/victorzhuk/hz-openapi-gen
 
 go 1.26.4
 

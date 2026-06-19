@@ -12,10 +12,10 @@ import (
 	"io"
 	"os"
 
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/diag"
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/generator"
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/openapi"
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/writer"
+	"github.com/victorzhuk/hz-openapi-gen/internal/diag"
+	"github.com/victorzhuk/hz-openapi-gen/internal/generator"
+	"github.com/victorzhuk/hz-openapi-gen/internal/openapi"
+	"github.com/victorzhuk/hz-openapi-gen/internal/writer"
 )
 
 // Exit codes (per spec).

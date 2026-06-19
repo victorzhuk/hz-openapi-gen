@@ -8,7 +8,7 @@ import (
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/diag"
+	"github.com/victorzhuk/hz-openapi-gen/internal/diag"
 )
 
 // ExtractOptions controls how strictly the spec is interpreted.

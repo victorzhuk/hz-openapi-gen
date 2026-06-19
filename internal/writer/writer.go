@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/generator"
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/hzutil"
+	"github.com/victorzhuk/hz-openapi-gen/internal/generator"
+	"github.com/victorzhuk/hz-openapi-gen/internal/hzutil"
 )
 
 var ErrUnsafeOverwrite = errors.New("unsafe overwrite prevented")

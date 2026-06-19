@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"sort"
 
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/hzutil"
-	"gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen/internal/openapi"
+	"github.com/victorzhuk/hz-openapi-gen/internal/hzutil"
+	"github.com/victorzhuk/hz-openapi-gen/internal/openapi"
 )
 
-const generatorModule = "gitlab.wildberries.ru/travel/travel-backend/adv/core/hz-openapi-gen"
+const generatorModule = "github.com/victorzhuk/hz-openapi-gen"
 
 type WriteMode string
 

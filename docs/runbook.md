@@ -3,7 +3,7 @@
 ## Generate a service from a spec
 
 ```
-go run ./cmd/hz-openapi-gen -spec=api/openapi.yaml -out=. -module=example.com/service
+go run . -spec=api/openapi.yaml -out=. -module=example.com/service
 ```
 
 Expected output:
@@ -25,7 +25,7 @@ hz-openapi-gen: done
 ## Validate without writing
 
 ```
-go run ./cmd/hz-openapi-gen -spec=api/openapi.yaml -module=example.com/service -validate-only
+go run . -spec=api/openapi.yaml -module=example.com/service -validate-only
 ```
 
 Expected: exit `0` with `validation passed: <N> operations, <M> schemas, <W> warnings`. No files written. Warnings and errors print to stderr. Non-zero exit on errors.
@@ -33,7 +33,7 @@ Expected: exit `0` with `validation passed: <N> operations, <M> schemas, <W> war
 ## Preview writes
 
 ```
-go run ./cmd/hz-openapi-gen -spec=api/openapi.yaml -out=. -module=example.com/service -dry-run
+go run . -spec=api/openapi.yaml -out=. -module=example.com/service -dry-run
 ```
 
 Expected: no files written. Output shows `hz-openapi-gen: dry-run (no files written)` followed by `planned files:` and result lines:
@@ -137,9 +137,9 @@ Skipped with `-short`. Flaky behavior usually indicates:
 
 ## Resolve quality gate failures
 
-- `golangci-lint run ./cmd/... ./internal/...` — fix reported code issues; suppress only confirmed false positives with `//nolint:<linter> // <specific reason>`.
-- `go tool govulncheck ./cmd/... ./internal/...` — upgrade the vulnerable module to the first fixed version, run `go mod tidy`, and rerun the scan. Note: govulncheck currently panics on Go 1.26 due to an `x/tools` bug; the CI job is set to `allow_failure` until the upstream fix lands.
-- `go test ./cmd/hz-openapi-gen -run TestGeneratedServiceCompiles` — rerun when generated-service compile fails; inspect the temp service error in test output.
+- `golangci-lint run . ./internal/...` — fix reported code issues; suppress only confirmed false positives with `//nolint:<linter> // <specific reason>`.
+- `go tool govulncheck . ./internal/...` — upgrade the vulnerable module to the first fixed version, run `go mod tidy`, and rerun the scan. Note: govulncheck currently panics on Go 1.26 due to an `x/tools` bug; the CI job is set to `allow_failure` until the upstream fix lands.
+- `go test . -run TestGeneratedServiceCompiles` — rerun when generated-service compile fails; inspect the temp service error in test output.
 ## Exit codes
 
 | Code | Meaning |

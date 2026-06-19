@@ -92,7 +92,7 @@ Handler merge is a structured append, not a text diff. Each `generator.Generated
 
 | Package | Role |
 |---------|------|
-| `cmd/hz-openapi-gen` | CLI entry point: flag parsing, orchestration, exit codes, result reporting |
+| `main.go` | CLI entry point: flag parsing, orchestration, exit codes, result reporting |
 | `internal/openapi` | OpenAPI loading (`libopenapi`), extraction to `SpecModel`, Go name computation, schema-to-Go-type mapping |
 | `internal/generator` | Template definitions, `Generate` orchestration, file plan construction, `GoMergePlan` |
 | `internal/hzutil` | Go formatting (`go/format.Source`), import insertion (`astutil.AddNamedImport`), function existence check (regex), path construction (`SubPackage`, `SubDir`) |

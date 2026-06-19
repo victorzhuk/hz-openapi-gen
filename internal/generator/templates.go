@@ -133,7 +133,7 @@ const generateTmpl = `
 
 package main
 
-//go:generate go run {{.GenModule}}/cmd/hz-openapi-gen -spec={{.SpecPath}} -out=. -module={{.Module}}
+//go:generate go run {{.GenModule}} -spec={{.SpecPath}} -out=. -module={{.Module}}
 
 func main() {}
 {{end}}`

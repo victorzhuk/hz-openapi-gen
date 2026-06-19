@@ -14,13 +14,13 @@ common REST APIs. See [Limitations](#limitations).
 ## Install / run
 
 ```sh
-go run ./cmd/hz-openapi-gen -spec=api/openapi.yaml -out=. -module=example.com/service
+go run . -spec=api/openapi.yaml -out=. -module=example.com/service
 ```
 
 Or add a directive to your service and run `go generate ./...`:
 
 ```go
-//go:generate go run github.com/victorzhuk/hz-openapi-gen/cmd/hz-openapi-gen -spec=api/openapi.yaml -out=. -module=example.com/service
+//go:generate go run github.com/victorzhuk/hz-openapi-gen -spec=api/openapi.yaml -out=. -module=example.com/service
 ```
 
 ## What it generates

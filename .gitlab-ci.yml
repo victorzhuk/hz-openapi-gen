@@ -25,7 +25,7 @@ build:
   extends: .go-cache
   script:
     - go mod download
-    - go build ./cmd/... ./internal/...
+    - go build . ./internal/...
 
 test-short:
   stage: quality
@@ -39,7 +39,7 @@ test-generated-service:
   extends: .go-cache
   script:
     - go mod download
-    - go test ./cmd/hz-openapi-gen -run TestGeneratedServiceCompiles
+    - go test . -run TestGeneratedServiceCompiles
 
 lint:
   stage: quality
@@ -48,7 +48,7 @@ lint:
   script:
     - go mod download
     - golangci-lint config verify
-    - golangci-lint run ./cmd/... ./internal/...
+    - golangci-lint run . ./internal/...
 
 # govulncheck panics on Go 1.26 type params due to an x/tools bug;
 # allow_failure keeps it from blocking the pipeline. Re-enable when
@@ -59,4 +59,4 @@ vulnerability:
   allow_failure: true
   script:
     - go mod download
-    - go tool govulncheck ./cmd/... ./internal/...
+    - go tool govulncheck . ./internal/...

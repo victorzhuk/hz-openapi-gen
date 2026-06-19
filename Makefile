@@ -14,7 +14,7 @@ GOARCH ?= $(shell go env GOARCH)
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION)"
 
-SRC_PKGS := ./cmd/... ./internal/...
+SRC_PKGS := . ./internal/...
 
 .DEFAULT_GOAL := help
 
@@ -33,11 +33,11 @@ help:
 ## build: compile the binary into bin/ (static)
 build:
 	@mkdir -p $(BIN_DIR)
-	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(LDFLAGS) -trimpath -o $(BINARY) ./cmd/hz-openapi-gen
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build $(LDFLAGS) -trimpath -o $(BINARY) .
 
 ## install: install the binary to $GOPATH/bin
 install:
-	go install $(LDFLAGS) ./cmd/hz-openapi-gen
+	go install $(LDFLAGS) .
 
 ## clean: remove build artifacts
 clean:
@@ -72,7 +72,7 @@ test-race:
 
 ## test-generated: build and vet the generated golden service (needs network)
 test-generated:
-	go test ./cmd/hz-openapi-gen -run TestGeneratedServiceCompiles -count 1
+	go test . -run TestGeneratedServiceCompiles -count 1
 
 ## verify-mod: tidy modules and verify they are clean
 verify-mod:

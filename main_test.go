@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const minimalSpec = "../../testdata/minimal.yaml"
+const minimalSpec = "testdata/minimal.yaml"
 
 func TestRunExitCodes(t *testing.T) {
 	cases := []struct {
@@ -87,7 +87,7 @@ func TestGeneratedServiceCompiles(t *testing.T) {
 	}
 	specs := map[string]string{
 		"minimal":  minimalSpec,
-		"petstore": "../../testdata/petstore.yaml",
+		"petstore": "testdata/petstore.yaml",
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {

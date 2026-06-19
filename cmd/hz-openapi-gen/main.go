@@ -25,6 +25,7 @@ const (
 	exitUsage       = 2 // CLI usage error
 	exitUnsafeWrite = 3 // refused to overwrite a non-generated file
 )
+
 var version = "dev"
 
 type config struct {

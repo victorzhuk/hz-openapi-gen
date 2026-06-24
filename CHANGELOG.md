@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Breaking:** `main.go` moved from `cmd/hz-openapi-gen/` to repo root. Install with `go install github.com/victorzhuk/hz-openapi-gen@latest` (no `/cmd/hz-openapi-gen` suffix needed).
 
+## [0.2.2] - 2026-06-24
+
+### Fixed
+
+- Model generation produced an invalid Go field for property names with non-alphanumeric characters. `google.protobuf.Any`'s `@type` property became `X@type`, which `go/format` rejects. `splitWords` now treats any non-alphanumeric rune as a word separator, so `@type` maps to the exported field `Type` while the `json:"@type"` tag is preserved.
+
 ## [0.1.2] - 2026-06-19
 
 ### Changed

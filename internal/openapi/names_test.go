@@ -15,6 +15,8 @@ func TestExported(t *testing.T) {
 		"HTTPServer":  "HTTPServer",
 		"url":         "URL",
 		"list-users":  "ListUsers",
+		"@type":       "Type",
+		"x-api-key":   "XAPIKey",
 		"":            "Generated",
 	}
 	for in, want := range cases {

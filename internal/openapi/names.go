@@ -85,7 +85,7 @@ func splitWords(s string) []string {
 	runes := []rune(s)
 	for i, r := range runes {
 		switch {
-		case r == '_' || r == '-' || r == ' ' || r == '.' || r == '/' || r == '{' || r == '}':
+		case !unicode.IsLetter(r) && !unicode.IsDigit(r):
 			flush()
 		case unicode.IsUpper(r):
 			if i > 0 {

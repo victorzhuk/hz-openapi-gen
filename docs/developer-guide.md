@@ -33,11 +33,15 @@ Templates are defined as Go string constants in `internal/generator/templates.go
 | `routerTmpl` | `{{define "router"}}` — full router file | `render("router", …)` |
 | `handlerTmpl` | `{{define "handler"}}` — full handler file skeleton | `render("handler", …)` |
 | `handlerFuncTmpl` | `{{define "handlerFunc"}}` — single handler function | `renderHandlerFunc(…)` |
+| `delegateHandlerTmpl` | `{{define "delegateHandler"}}` — full delegate handler file (cover mode) | `render("delegateHandler", …)` (delegate mode) |
+| `opidConstantsTmpl` | `{{define "opidConstants"}}` — operationId constants file | `render("opidConstants", …)` (delegate mode) |
 | `modelTmpl` | `{{define "model"}}` — full model file | `render("model", …)` |
 | `mainTmpl` | `{{define "main"}}` — full main.go | `render("main", …)` |
 | `generateTmpl` | `{{define "generate"}}` — full generate.go | `render("generate", …)` |
 
 **Critical rule:** `renderHandlerFunc` returns a raw Go function snippet — it does **not** call `hzutil.FormatGo`. Do not change `renderHandlerFunc` to format its output. `go/format.Source` requires a complete Go file (with `package` declaration), and formatting a bare function snippet will fail. The function snippet is later appended to a complete handler file, and only the final merged file is formatted by `writer.mergeGoFile`.
+
+The delegate templates do not use `renderHandlerFunc`: `delegateHandlerTmpl` renders a complete file (package, imports, and every handler function for the tag) and goes through `render`, so it is formatted as a whole. `opidConstantsTmpl` renders the complete constants file the same way.
 
 When you change a template, regenerate golden snapshots:
 
@@ -82,6 +86,12 @@ Golden snapshots live under `testdata/golden/` and are generated from `testdata/
 make golden
 ```
 
+or, equivalently for the generator package:
+
+```
+UPDATE_GOLDEN=1 go test ./internal/generator/...
+```
+
 **Verify:**
 
 ```
@@ -89,6 +99,19 @@ go test ./internal/generator/...
 ```
 
 Golden tests compare the rendered output byte-for-byte. Any template, name computation, or type-mapping change that affects output requires a golden update.
+
+## Testing delegate handler mode
+
+Delegate mode has its own golden fixtures and dedicated tests:
+
+- `testdata/golden-delegate/` — golden snapshots for delegate mode, including the `biz/opid/opid.go` constants file. Regenerate the same way: `UPDATE_GOLDEN=1 go test ./internal/generator/...` (or `make golden`).
+- `TestGenerateDelegateGolden` (`internal/generator`) — byte-for-byte comparison of delegate-mode output against `testdata/golden-delegate/`.
+- `TestDelegateHandlersReferenceConstants` (`internal/generator`) — asserts delegate handler bodies contain no `StatusNotImplemented`/`BindAndValidate` and reference `opid.<FuncName>` constants rather than string literals.
+- `TestRunDelegateModeValidation` (`main_test.go`) — covers default mode, valid delegate mode, and the usage-error paths (missing import/function, invalid identifiers, reserved package name).
+- `TestRunDelegateModeRequiresOperationID` (`main_test.go`) — non-empty `operationId` is enforced regardless of `-strict`.
+- The `delegate` subtest of `TestGeneratedServiceCompiles` (`main_test.go`) — writes a tiny local delegate package alongside the generated service and asserts it builds and vets (skipped in `-short`, needs the module cache).
+
+The writer side of mode switches is covered by `TestWriteStubToDelegateReplacesWithoutForce`, `TestWriteCoverAcceptsGeneratedMarker`, and `TestWriteDelegateToStubEmitsWarning` in `internal/writer/writer_test.go`.
 
 ## Adding fixtures
 

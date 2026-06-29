@@ -25,6 +25,7 @@ type Result struct {
 	Changed   []string
 	Unchanged []string
 	Skipped   []string
+	Warnings  []string
 }
 
 type plannedWrite struct {
@@ -43,7 +44,7 @@ func Write(files []generator.GeneratedFile, opts Options) (Result, error) {
 
 		switch f.Mode {
 		case generator.WriteCover:
-			if exists && !opts.Force && !hasMarker(existing, generator.DoNotEditMarker) {
+			if exists && !opts.Force && !hasMarker(existing, generator.DoNotEditMarker) && !hasMarker(existing, generator.GeneratedMarker) {
 				return res, fmt.Errorf("%w: %s does not contain %q", ErrUnsafeOverwrite, f.Path, generator.DoNotEditMarker)
 			}
 			if exists && bytes.Equal(existing, f.Content) {
@@ -77,6 +78,11 @@ func Write(files []generator.GeneratedFile, opts Options) (Result, error) {
 			if f.Merge == nil {
 				return res, fmt.Errorf("merge plan missing for %s", f.Path)
 			}
+			for _, fn := range f.Merge.Functions {
+				if hzutil.HasGoFunction(existing, fn.Name) && funcHasDelegateMarker(existing, fn.Name) {
+					res.Warnings = append(res.Warnings, fmt.Sprintf("handler %s: existing function %s was generated in delegate mode and was not replaced", f.Path, fn.Name))
+				}
+			}
 			merged, changed, err := mergeGoFile(existing, f.Merge)
 			if err != nil {
 				return res, fmt.Errorf("merge %s: %w", f.Path, err)
@@ -105,6 +111,7 @@ func Write(files []generator.GeneratedFile, opts Options) (Result, error) {
 	sort.Strings(res.Changed)
 	sort.Strings(res.Unchanged)
 	sort.Strings(res.Skipped)
+	sort.Strings(res.Warnings)
 	return res, nil
 }
 
@@ -114,6 +121,26 @@ func hasMarker(content []byte, marker string) bool {
 		head = content[:nl]
 	}
 	return bytes.Contains(head, []byte(marker))
+}
+
+func funcHasDelegateMarker(src []byte, name string) bool {
+	start := bytes.Index(src, []byte("func "+name+"("))
+	if start < 0 {
+		return false
+	}
+	depth := 0
+	for i := start; i < len(src); i++ {
+		switch src[i] {
+		case '{':
+			depth++
+		case '}':
+			depth--
+			if depth == 0 {
+				return bytes.Contains(src[start:i+1], []byte("// delegated"))
+			}
+		}
+	}
+	return false
 }
 
 func mergeGoFile(existing []byte, plan *generator.GoMergePlan) (result []byte, changed bool, err error) {

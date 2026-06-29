@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Delegate handler mode (`-handler-mode=delegate`) for proxy/gateway services. Generated handlers call a configured delegate function with `ctx`, `c`, and a generated operationId constant from `biz/opid/opid.go`.
+- OperationId constants file in delegate mode (`biz/opid/opid.go`), cover-mode with DO-NOT-EDIT marker.
+- Safe stub↔delegate mode switches: cover mode accepts the generated marker for overwrite, and stub regeneration warns when an existing handler body is a delegate call.
+- CLI validation for delegate-mode flags (required import/function, valid Go identifiers, reserved package-name collision) and non-empty operationId enforcement in delegate mode.
+
 ### Changed
 
 - **Breaking:** `main.go` moved from `cmd/hz-openapi-gen/` to repo root. Install with `go install github.com/victorzhuk/hz-openapi-gen@latest` (no `/cmd/hz-openapi-gen` suffix needed).

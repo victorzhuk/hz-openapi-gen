@@ -18,6 +18,13 @@ const (
 	WriteMerge  WriteMode = "merge"
 )
 
+type HandlerMode string
+
+const (
+	HandlerModeStub     HandlerMode = "stub"
+	HandlerModeDelegate HandlerMode = "delegate"
+)
+
 type GoImport struct {
 	Alias string
 	Path  string
@@ -47,6 +54,10 @@ type Options struct {
 	SpecPath           string
 	GenerateMain       bool
 	GenerateGoGenerate bool
+	HandlerMode        HandlerMode
+	DelegateImport     string
+	DelegatePackage    string
+	DelegateFunc       string
 }
 
 var hertzVerb = map[string]bool{
@@ -67,6 +78,15 @@ func Generate(spec openapi.SpecModel, opts Options) ([]GeneratedFile, error) {
 		base = "biz"
 	}
 
+	if opts.HandlerMode == HandlerModeDelegate {
+		for i := range spec.Operations {
+			op := &spec.Operations[i]
+			if op.OperationID == "" {
+				return nil, fmt.Errorf("delegate mode requires operationId for operation %s %s", op.Method, op.OpenAPIPath)
+			}
+		}
+	}
+
 	var files []GeneratedFile
 
 	routerFile, err := renderRouter(spec, opts, base)
@@ -74,6 +94,14 @@ func Generate(spec openapi.SpecModel, opts Options) ([]GeneratedFile, error) {
 		return nil, err
 	}
 	files = append(files, routerFile)
+
+	if opts.HandlerMode == HandlerModeDelegate {
+		opidFile, err := renderOpIDConstants(spec, base)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, opidFile)
+	}
 
 	handlerFiles, err := renderHandlers(spec, opts, base)
 	if err != nil {
@@ -112,6 +140,33 @@ func Generate(spec openapi.SpecModel, opts Options) ([]GeneratedFile, error) {
 	return files, nil
 }
 
+func renderOpIDConstants(spec openapi.SpecModel, base string) (GeneratedFile, error) {
+	type constDef struct {
+		ConstName   string
+		OperationID string
+	}
+	ops := make([]constDef, 0, len(spec.Operations))
+	for i := range spec.Operations {
+		op := &spec.Operations[i]
+		ops = append(ops, constDef{
+			ConstName:   openapi.Exported(op.OperationID),
+			OperationID: op.OperationID,
+		})
+	}
+	content, err := render("opidConstants", map[string]any{
+		"Operations": ops,
+	})
+	if err != nil {
+		return GeneratedFile{}, err
+	}
+	return GeneratedFile{
+		Path:    hzutil.SubDir(hzutil.SubDir(base, "opid"), "opid.go"),
+		Content: content,
+		Kind:    "opid",
+		Mode:    WriteCover,
+	}, nil
+}
+
 func renderRouter(spec openapi.SpecModel, opts Options, base string) (GeneratedFile, error) {
 	type routeLine struct{ Stmt string }
 	routes := make([]routeLine, 0, len(spec.Operations))
@@ -148,12 +203,34 @@ func renderHandlers(spec openapi.SpecModel, opts Options, base string) ([]Genera
 	sort.Strings(order)
 
 	handlerDir := hzutil.SubDir(base, "handler")
-	modelDir := hzutil.SubDir(base, "model")
-	modelImport := hzutil.SubPackage(opts.Module, modelDir)
+	opidImport := hzutil.SubPackage(opts.Module, hzutil.SubDir(base, "opid"))
 
 	var files []GeneratedFile
 	for _, hf := range order {
 		handlers := groups[hf]
+
+		if opts.HandlerMode == HandlerModeDelegate {
+			content, err := render("delegateHandler", map[string]any{
+				"DelegateImport":  opts.DelegateImport,
+				"DelegatePackage": opts.DelegatePackage,
+				"DelegateFunc":    opts.DelegateFunc,
+				"OpidImport":      opidImport,
+				"Handlers":        handlers,
+			})
+			if err != nil {
+				return nil, err
+			}
+			files = append(files, GeneratedFile{
+				Path:    hzutil.SubDir(handlerDir, hf),
+				Content: content,
+				Kind:    "handler",
+				Mode:    WriteCover,
+			})
+			continue
+		}
+
+		modelDir := hzutil.SubDir(base, "model")
+		modelImport := hzutil.SubPackage(opts.Module, modelDir)
 
 		needModel := false
 		for i := range handlers {

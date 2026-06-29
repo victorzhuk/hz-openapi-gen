@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 
 	"github.com/victorzhuk/hz-openapi-gen/internal/diag"
 	"github.com/victorzhuk/hz-openapi-gen/internal/generator"
@@ -39,6 +40,10 @@ type config struct {
 	generateGoGenerate bool
 	force              bool
 	strict             bool
+	handlerMode        string
+	delegateImport     string
+	delegatePackage    string
+	delegateFunc       string
 }
 
 func main() {
@@ -61,6 +66,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 	fs.BoolVar(&cfg.force, "force", false, "allow overwriting non-generated files")
 	fs.BoolVar(&showVersion, "version", false, "print version and exit")
 	fs.BoolVar(&cfg.strict, "strict", true, "treat missing operationIds and unsupported constructs as errors")
+	fs.StringVar(&cfg.handlerMode, "handler-mode", "stub", "handler generation mode: stub or delegate")
+	fs.StringVar(&cfg.delegateImport, "delegate-import", "", "import path for the delegate package (required in delegate mode)")
+	fs.StringVar(&cfg.delegatePackage, "delegate-package", "", "package alias/name for the delegate import (required in delegate mode)")
+	fs.StringVar(&cfg.delegateFunc, "delegate-func", "", "delegate function name (required in delegate mode)")
 	fs.Usage = func() { usage(stderr, fs) }
 
 	if err := fs.Parse(args); err != nil {
@@ -79,6 +88,43 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "hz-openapi-gen: -module is required (unless -validate-only)")
 		usage(stderr, fs)
 		return exitUsage
+	}
+
+	switch cfg.handlerMode {
+	case "stub", "delegate":
+	default:
+		fmt.Fprintln(stderr, "hz-openapi-gen: -handler-mode must be stub or delegate")
+		usage(stderr, fs)
+		return exitUsage
+	}
+
+	if cfg.handlerMode == "delegate" {
+		if cfg.delegateImport == "" {
+			fmt.Fprintln(stderr, "hz-openapi-gen: -delegate-import is required in delegate mode")
+			usage(stderr, fs)
+			return exitUsage
+		}
+		if cfg.delegateFunc == "" {
+			fmt.Fprintln(stderr, "hz-openapi-gen: -delegate-func is required in delegate mode")
+			usage(stderr, fs)
+			return exitUsage
+		}
+		if !isIdentifier(cfg.delegatePackage) {
+			fmt.Fprintln(stderr, "hz-openapi-gen: -delegate-package must be a valid Go identifier")
+			usage(stderr, fs)
+			return exitUsage
+		}
+		if !isIdentifier(cfg.delegateFunc) {
+			fmt.Fprintln(stderr, "hz-openapi-gen: -delegate-func must be a valid Go identifier")
+			usage(stderr, fs)
+			return exitUsage
+		}
+		switch cfg.delegatePackage {
+		case "context", "app", "consts", "opid":
+			fmt.Fprintf(stderr, "hz-openapi-gen: -delegate-package %q is reserved\n", cfg.delegatePackage)
+			usage(stderr, fs)
+			return exitUsage
+		}
 	}
 
 	data, err := os.ReadFile(cfg.specPath)
@@ -117,6 +163,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		SpecPath:           cfg.specPath,
 		GenerateMain:       cfg.generateMain,
 		GenerateGoGenerate: cfg.generateGoGenerate,
+		HandlerMode:        generator.HandlerMode(cfg.handlerMode),
+		DelegateImport:     cfg.delegateImport,
+		DelegatePackage:    cfg.delegatePackage,
+		DelegateFunc:       cfg.delegateFunc,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "hz-openapi-gen: %v\n", err)
@@ -132,11 +182,11 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return exitError
 	}
 
-	reportResult(stdout, cfg, spec, res)
+	reportResult(stdout, stderr, cfg, spec, res)
 	return exitOK
 }
 
-func reportResult(stdout io.Writer, cfg config, spec openapi.SpecModel, res writer.Result) {
+func reportResult(stdout, stderr io.Writer, cfg config, spec openapi.SpecModel, res writer.Result) {
 	fmt.Fprintf(stdout, "hz-openapi-gen: loaded %s\n", cfg.specPath)
 	fmt.Fprintf(stdout, "hz-openapi-gen: extracted %d operations, %d schemas\n", len(spec.Operations), len(spec.Models))
 
@@ -167,6 +217,9 @@ func reportResult(stdout io.Writer, cfg config, spec openapi.SpecModel, res writ
 	for _, p := range res.Skipped {
 		fmt.Fprintf(stdout, "hz-openapi-gen: skipped %s (exists, not generated)\n", p)
 	}
+	for _, w := range res.Warnings {
+		fmt.Fprintf(stderr, "hz-openapi-gen: warning: %s\n", w)
+	}
 	fmt.Fprintln(stdout, "hz-openapi-gen: done")
 }
 
@@ -184,4 +237,10 @@ func usage(w io.Writer, fs *flag.FlagSet) {
 	fmt.Fprintln(w, "  hz-openapi-gen -spec=api/openapi.yaml -out=. -module=example.com/service -dry-run")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Exit codes: 0 ok, 1 parse/validation/generation error, 2 usage error, 3 unsafe overwrite prevented")
+}
+
+var identRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+func isIdentifier(s string) bool {
+	return identRe.MatchString(s)
 }

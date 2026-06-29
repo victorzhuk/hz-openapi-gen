@@ -221,3 +221,131 @@ func countFunc(src, name string) int {
 	}
 	return n
 }
+
+func TestWriteCoverAcceptsGeneratedMarker(t *testing.T) {
+	dir := t.TempDir()
+	handlerPath := filepath.Join(dir, "biz", "handler", "health.go")
+	require.NoError(t, os.MkdirAll(filepath.Dir(handlerPath), 0o755))
+	require.NoError(t, os.WriteFile(handlerPath, []byte(generator.GeneratedMarker+"\n\npackage handler\n"), 0o644))
+
+	coverFile := generator.GeneratedFile{
+		Path:    "biz/handler/health.go",
+		Content: []byte(generator.DoNotEditMarker + "\n\npackage handler\n"),
+		Mode:    generator.WriteCover,
+	}
+	res, err := Write([]generator.GeneratedFile{coverFile}, Options{OutDir: dir})
+	require.NoError(t, err)
+	assert.Equal(t, []string{"biz/handler/health.go"}, res.Changed)
+
+	b, err := os.ReadFile(handlerPath)
+	require.NoError(t, err)
+	assert.Contains(t, string(b), generator.DoNotEditMarker)
+}
+
+func TestWriteDelegateToStubEmitsWarning(t *testing.T) {
+	dir := t.TempDir()
+
+	handlerContent := generator.DoNotEditMarker + `
+
+package handler
+
+import (
+	"context"
+
+	"github.com/cloudwego/hertz/pkg/app"
+)
+
+func GetHealth(ctx context.Context, c *app.RequestContext) {
+	// delegated
+	public.Serve(ctx, c, opid.GetHealth)
+}
+`
+	handlerPath := filepath.Join(dir, "biz", "handler", "health.go")
+	require.NoError(t, os.MkdirAll(filepath.Dir(handlerPath), 0o755))
+	require.NoError(t, os.WriteFile(handlerPath, []byte(handlerContent), 0o644))
+
+	mergeFile := generator.GeneratedFile{
+		Path: "biz/handler/health.go",
+		Kind: "handler",
+		Mode: generator.WriteMerge,
+		Merge: &generator.GoMergePlan{
+			Functions: []generator.GoFunction{
+				{
+					Name:    "GetHealth",
+					Content: []byte("func GetHealth(ctx context.Context, c *app.RequestContext) {\n\tc.JSON(consts.StatusNotImplemented, map[string]string{\"error\": \"not implemented\"})\n}\n"),
+					Imports: []generator.GoImport{
+						{Alias: "", Path: "context"},
+						{Alias: "", Path: "github.com/cloudwego/hertz/pkg/app"},
+						{Alias: "", Path: "github.com/cloudwego/hertz/pkg/protocol/consts"},
+					},
+				},
+			},
+		},
+	}
+
+	res, err := Write([]generator.GeneratedFile{mergeFile}, Options{OutDir: dir})
+	require.NoError(t, err)
+	require.Len(t, res.Warnings, 1)
+	assert.Contains(t, res.Warnings[0], "GetHealth")
+	assert.Contains(t, res.Warnings[0], "biz/handler/health.go")
+
+	b, err := os.ReadFile(handlerPath)
+	require.NoError(t, err)
+	content := string(b)
+	assert.Contains(t, content, "// delegated", "delegate body must be preserved")
+	assert.Contains(t, content, "public.Serve(ctx, c, opid.GetHealth)", "delegate call must remain")
+}
+
+func TestWriteStubToDelegateReplacesWithoutForce(t *testing.T) {
+	dir := t.TempDir()
+
+	stubContent := generator.GeneratedMarker + `
+
+package handler
+
+import (
+	"context"
+
+	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/protocol/consts"
+)
+
+func GetHealth(ctx context.Context, c *app.RequestContext) {
+	c.JSON(consts.StatusNotImplemented, map[string]string{"error": "not implemented"})
+}
+`
+	handlerPath := filepath.Join(dir, "biz", "handler", "health.go")
+	require.NoError(t, os.MkdirAll(filepath.Dir(handlerPath), 0o755))
+	require.NoError(t, os.WriteFile(handlerPath, []byte(stubContent), 0o644))
+
+	delegateContent := generator.DoNotEditMarker + `
+
+package handler
+
+import (
+	"context"
+
+	"github.com/cloudwego/hertz/pkg/app"
+)
+
+func GetHealth(ctx context.Context, c *app.RequestContext) {
+	// delegated
+	public.Serve(ctx, c, opid.GetHealth)
+}
+`
+	coverFile := generator.GeneratedFile{
+		Path:    "biz/handler/health.go",
+		Content: []byte(delegateContent),
+		Mode:    generator.WriteCover,
+	}
+	res, err := Write([]generator.GeneratedFile{coverFile}, Options{OutDir: dir})
+	require.NoError(t, err)
+	assert.Equal(t, []string{"biz/handler/health.go"}, res.Changed)
+
+	b, err := os.ReadFile(handlerPath)
+	require.NoError(t, err)
+	content := string(b)
+	assert.Contains(t, content, "// delegated", "file must be replaced with delegate content")
+	assert.Contains(t, content, "public.Serve(ctx, c, opid.GetHealth)")
+	assert.NotContains(t, content, "StatusNotImplemented", "stub body must be gone")
+}

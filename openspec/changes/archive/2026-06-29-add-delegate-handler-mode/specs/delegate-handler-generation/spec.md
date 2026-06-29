@@ -86,7 +86,7 @@ In delegate handler mode, handler files SHALL be generated cover-mode files with
 
 - **WHEN** handler files previously generated in delegate mode exist
 - **AND** the generator runs again in stub mode
-- **THEN** the generator emits a diagnostic that an existing handler body is a delegate call and was not replaced
+- **THEN** the generator emits a diagnostic that an existing handler body was generated in delegate mode and was not replaced
 
 ### Requirement: Stub mode remains backward compatible
 

@@ -86,7 +86,7 @@ Today the writer blocks a stub→delegate switch and silently mishandles delegat
 - stub→delegate: cover mode requires `DoNotEditMarker`, but stub files carry the shorter `GeneratedMarker`, so the write is refused with `ErrUnsafeOverwrite`; the only escape, `-force`, bypasses marker checks for every file globally.
 - delegate→stub: merge sees the functions already exist and silently keeps the delegate bodies, with no warning.
 
-Decision: cover mode accepts any file carrying the tool's `GeneratedMarker` (which `DoNotEditMarker` contains) as overwritable. Stub→delegate then regenerates the tool-owned handler files cleanly without global `-force`. On delegate→stub, the writer surfaces a warning (in its result, reported by `main`) when an existing handler body is a delegate call, instead of silently leaving it.
+Decision: cover mode accepts any file carrying the tool's `GeneratedMarker` (which `DoNotEditMarker` contains) as overwritable. Stub→delegate then regenerates the tool-owned handler files cleanly without global `-force`. On delegate→stub, the writer surfaces a warning (in its result, reported by `main`) when an existing handler body carries the delegate-mode marker (i.e. it was generated in delegate mode), instead of silently leaving it.
 
 Trade-off: a stub handler the developer hand-filled with real logic still carries `GeneratedMarker`, so switching that service to delegate mode overwrites it. This is acceptable and intended — delegate mode is opt-in and owns the handler files; a service with real business logic is not a candidate for delegate mode. Documented in the runbook.
 

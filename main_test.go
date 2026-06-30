@@ -35,6 +35,21 @@ func TestRunExitCodes(t *testing.T) {
 	}
 }
 
+func TestResolveVersion(t *testing.T) {
+	orig := version
+	t.Cleanup(func() { version = orig })
+
+	t.Run("ldflag override wins", func(t *testing.T) {
+		version = "v1.2.3"
+		assert.Equal(t, "v1.2.3", resolveVersion())
+	})
+
+	t.Run("dev sentinel without release build info", func(t *testing.T) {
+		version = "dev"
+		assert.Equal(t, "dev", resolveVersion())
+	})
+}
+
 func TestRunMissingOperationIDFailsStrict(t *testing.T) {
 	dir := t.TempDir()
 	spec := filepath.Join(dir, "noid.yaml")

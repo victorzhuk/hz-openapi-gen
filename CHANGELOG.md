@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `--version` reported `dev` on binaries installed with `go install` because the build-time ldflag is only applied by `make build`/`make install`. The version now falls back to the module version Go embeds in `go install` builds.
+
 ## [0.3.0] - 2026-06-30
 
 ### Added

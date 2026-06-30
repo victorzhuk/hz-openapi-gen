@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"runtime/debug"
 
 	"github.com/victorzhuk/hz-openapi-gen/internal/diag"
 	"github.com/victorzhuk/hz-openapi-gen/internal/generator"
@@ -28,6 +29,18 @@ const (
 )
 
 var version = "dev"
+
+// resolveVersion prefers the ldflag-injected version (make build/install) and
+// otherwise reads the module version Go bakes into go-install builds.
+func resolveVersion() string {
+	if version != "dev" {
+		return version
+	}
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return version
+}
 
 type config struct {
 	specPath           string
@@ -76,7 +89,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 	if showVersion {
-		fmt.Fprintln(stdout, "hz-openapi-gen "+version)
+		fmt.Fprintln(stdout, "hz-openapi-gen "+resolveVersion())
 		return exitOK
 	}
 	if cfg.specPath == "" {

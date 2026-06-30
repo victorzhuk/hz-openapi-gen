@@ -13,8 +13,17 @@ common REST APIs. See [Limitations](#limitations).
 
 ## Install / run
 
+Run directly without installing:
+
 ```sh
 go run . -spec=api/openapi.yaml -out=. -module=example.com/service
+```
+
+Or install a versioned binary:
+
+```sh
+go install github.com/victorzhuk/hz-openapi-gen@latest
+hz-openapi-gen --version
 ```
 
 Or add a directive to your service and run `go generate ./...`:

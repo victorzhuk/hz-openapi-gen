@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-30
+
 ### Added
 
 - Delegate handler mode (`-handler-mode=delegate`) for proxy/gateway services. Generated handlers call a configured delegate function with `ctx`, `c`, and a generated operationId constant from `biz/opid/opid.go`.
@@ -13,15 +15,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Safe stub↔delegate mode switches: cover mode accepts the generated marker for overwrite, and stub regeneration warns when an existing handler body is a delegate call.
 - CLI validation for delegate-mode flags (required import/function, valid Go identifiers, reserved package-name collision) and non-empty operationId enforcement in delegate mode.
 
-### Changed
-
-- **Breaking:** `main.go` moved from `cmd/hz-openapi-gen/` to repo root. Install with `go install github.com/victorzhuk/hz-openapi-gen@latest` (no `/cmd/hz-openapi-gen` suffix needed).
-
 ## [0.2.2] - 2026-06-24
 
 ### Fixed
 
 - Model generation produced an invalid Go field for property names with non-alphanumeric characters. `google.protobuf.Any`'s `@type` property became `X@type`, which `go/format` rejects. `splitWords` now treats any non-alphanumeric rune as a word separator, so `@type` maps to the exported field `Type` while the `json:"@type"` tag is preserved.
+
+## [0.2.1] - 2026-06-19
+
+### Changed
+
+- **Breaking:** `main.go` moved from `cmd/hz-openapi-gen/` to repo root. Install with `go install github.com/victorzhuk/hz-openapi-gen@latest` (no `/cmd/hz-openapi-gen` suffix needed).
+
+## [0.2.0] - 2026-06-19
+
+Re-tag of 0.1.2 — the breaking module-path migration promoted to a minor release line.
 
 ## [0.1.2] - 2026-06-19
 
@@ -50,7 +58,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Development and CI quality gates for build, short tests, generated-service compilation, linting, and `govulncheck`.
 - Project documentation for architecture, developer workflow, and runbook procedures.
 
-[Unreleased]: https://github.com/victorzhuk/hz-openapi-gen/compare/v0.1.2...main
+[Unreleased]: https://github.com/victorzhuk/hz-openapi-gen/compare/v0.3.0...main
+[0.3.0]: https://github.com/victorzhuk/hz-openapi-gen/compare/v0.2.2...v0.3.0
+[0.2.2]: https://github.com/victorzhuk/hz-openapi-gen/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/victorzhuk/hz-openapi-gen/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/victorzhuk/hz-openapi-gen/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/victorzhuk/hz-openapi-gen/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/victorzhuk/hz-openapi-gen/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/victorzhuk/hz-openapi-gen/releases/tag/v0.1.0
